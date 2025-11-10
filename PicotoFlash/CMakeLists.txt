@@ -12,6 +12,7 @@ add_executable(PicotoFlash
     write.c
     erase.c
     read.c
+    flash_backup_restore.c
 )
 
 add_subdirectory(fatfs/FatFs_SPI build/fatfs_spi)

@@ -31,10 +31,10 @@ void display_system_banner(void) {
     printf("========================================\n\n");
 }
 
-void display_startup_instructions(void) {
-    printf("Press GP20 to run identification\n");
-    printf("Press GP21 to view database\n\n");
-}
+// void display_startup_instructions(void) {
+//     printf("Press GP20 to run identification\n");
+//     printf("Press GP21 to view database\n\n");
+// }
 
 void display_sd_mount_attempt(int attempt, int max_attempts) {
     printf("Mounting SD card (attempt %d/%d)...\n", attempt, max_attempts);
