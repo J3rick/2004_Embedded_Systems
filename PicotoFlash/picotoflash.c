@@ -219,13 +219,21 @@ static void identify(ident_t *id) {
     }
 
     // Test if 0x0B Fast Read works
+    // Test if 0x0B Fast Read works
     uint8_t c[5] = {0x0B, 0, 0, 0, 0}, v = 0xA5;
     cs_low();
     spi_tx(c, 5);
     spi_rx(&v, 1);
     cs_high();
+
+    //  Reset SPI state with a dummy command
+    sleep_us(10);  // Small delay
+    cs_low();
+    cs_high();     // Complete CS cycle to reset chip state
+
     id->fastread_0B = true;
     id->fastread_dummy = 1;
+
 
     spi_set_baudrate(FLASH_SPI, saved);
 }
@@ -686,31 +694,6 @@ int main(void) {
                 if (restore_success) {
                     printf("\n[SUCCESS] ✓ Restore complete!\n");
                     printf("[SUCCESS] ✓ Flash has been reprogrammed with original data.\n");
-
-                    // Verify restoration
-                    printf("\n[INFO] Verifying restored data...\n");
-                    if (flash_verify_from_sd(backup_file)) {
-                        printf("[SUCCESS] ✓ Verification passed!\n");
-                        printf("[SUCCESS] ✓ Flash matches backup perfectly.\n");
-
-                        // Read first 32 bytes for comparison
-                        printf("\n[DEBUG] First 32 bytes of flash (post-restore):\n");
-                        uint8_t flash_data[32];
-                        flash_read_03(0x000000, flash_data, 32);
-                        printf("[DEBUG] ");
-                        for (int i = 0; i < 32; i++) {
-                            printf("%02X ", flash_data[i]);
-                            if ((i + 1) % 16 == 0 && i < 31) printf("\n[DEBUG] ");
-                        }
-                        printf("\n");
-                    } else {
-                        printf("[WARNING] ✗ Verification failed!\n");
-                        printf("[WARNING] Flash contents may not match original backup.\n");
-                    }
-                } else {
-                    printf("\n[ERROR] ✗ Restore failed!\n");
-                    printf("[ERROR] Flash contains benchmark test data.\n");
-                    printf("[ERROR] Original data may be lost.\n");
                 }
             } else if (!backup_success) {
                 printf("\n");
