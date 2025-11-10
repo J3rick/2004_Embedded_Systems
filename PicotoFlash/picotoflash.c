@@ -58,16 +58,6 @@
 #define PAGE_SIZE 256u
 #define ENABLE_DESTRUCTIVE_TESTS 1
 
-// ============ Wifi Details ============
-#define WIFI_SSID "Jerick S23"
-#define WIFI_PASSWORD "Jerick03"
-
-// ============ HTTP Details ============
-#define WEB_SERVER_PORT 80
-#define WEB_SERVER_TASK_STACK_SIZE 2048
-#define WEB_SERVER_TASK_PRIORITY 2
-#define RUN_FREERTOS_ON_CORE 0
-
 // ========== Global Variables ==========
 FlashChipData database[MAX_DATABASE_ENTRIES];
 int database_entry_count = 0;
@@ -152,13 +142,29 @@ static bool read_sfdp(uint32_t a, uint8_t *buf, size_t n) {
     return true;
 }
 
+// ==================== JEDEC FALLBACK CAPACITY ====================
+static void jedec_fallback_capacity(ident_t *id) {
+    uint8_t last_byte = id->jedec[2];  // last JEDEC byte
+    switch (last_byte) {
+        case 0x18: test_chip.capacity_mbit = 128.0f; break;
+        case 0x16: test_chip.capacity_mbit = 32.0f;  break;
+        case 0x13: test_chip.capacity_mbit = 4.0f;   break;
+        case 0x12: test_chip.capacity_mbit = 2.0f;   break;
+        case 0x11: test_chip.capacity_mbit = 1.0f;   break;
+        case 0x10: test_chip.capacity_mbit = 0.512f; break;
+        case 0x09: test_chip.capacity_mbit = 0.256f; break;
+        default:   test_chip.capacity_mbit = 0.0f;   break;
+    }
+    printf("[FALLBACK] Using JEDEC fallback capacity: %.3f Mbit\n", test_chip.capacity_mbit);
+}
+
 static void identify(ident_t *id) {
     memset(id, 0, sizeof(*id));
     read_jedec_id(id->jedec);
     
     // Save and set lower SPI speed for SFDP
     uint32_t saved = spi_get_baudrate(FLASH_SPI);
-    spi_set_baudrate(FLASH_SPI, 5 * 100 * 1000);
+    spi_set_baudrate(FLASH_SPI, 5 * 1000 * 1000);
     
     // Read SFDP header
     uint8_t hdr[8] = {0};
@@ -253,9 +259,10 @@ static void populate_test_chip_from_identification(ident_t *id) {
     snprintf(test_chip.jedec_id, sizeof(test_chip.jedec_id), 
              "%02X %02X %02X", id->jedec[0], id->jedec[1], id->jedec[2]);
     
-    // Calculate capacity from SFDP density
-    if (id->density_bits > 0) {
-        // density_bits is in bits, convert to Mbit
+    // Use fallback if SFDP density is zero or unrealistically small
+    if (id->density_bits == 0 || id->density_bits < 1024) {  // anything < 1 Kbit is invalid
+        jedec_fallback_capacity(id);
+    } else {
         test_chip.capacity_mbit = (float)(id->density_bits) / 1048576.0f;
     }
     
@@ -321,9 +328,8 @@ static void capture_erase_benchmark_results(void) {
 // ========== Main Function ==========
 int main(void) {
     stdio_init_all();
-    cyw43_arch_init();
     sleep_ms(2000);
-
+    
     printf("\n");
     printf("===============================================\n");
     printf(" UNIFIED FLASH BENCHMARK & IDENTIFICATION\n");
@@ -344,7 +350,6 @@ int main(void) {
     };
     rtc_init();
     rtc_set_datetime(&t);
-    cyw43_arch_enable_sta_mode();
     
     // Initialize SPI for flash
     spi_init(FLASH_SPI, 5 * 100 * 1000);
@@ -398,22 +403,6 @@ int main(void) {
             display_database_loaded(database_entry_count);
         }
     }
-
-    // Connect to WiFi
-    if (cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID, WIFI_PASSWORD, CYW43_AUTH_WPA2_AES_PSK, 30000)) {
-        printf("Failed to connect to WiFi. Check SSID/Password & signal.\n");
-        cyw43_arch_deinit();
-    }
-    else {
-        printf("Connected to WiFi Network: %s\n", WIFI_SSID);
-    }
-    // Display Network Information
-    printf("\n=== Network Information ===\n");
-    printf("IP Address: %s\n", ip4addr_ntoa(netif_ip4_addr(netif_list)));
-    printf("Netmask: %s\n", ip4addr_ntoa(netif_ip4_netmask(netif_list)));
-    printf("Gateway: %s\n", ip4addr_ntoa(netif_ip4_gw(netif_list)));
-    printf("===========================\n\n");
-
     
     display_startup_instructions();
     
