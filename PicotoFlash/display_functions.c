@@ -8,6 +8,9 @@
 #include <math.h>
 #include "display_functions.h"
 #include "identification.h"
+#include"read.h"
+#include"write.h"
+#include"erase.h"
 
 // External references
 extern FlashChipData database[];
@@ -88,6 +91,97 @@ void display_no_database_error(void) {
 void display_identification_complete(void) {
     printf("\n[INFO] Identification complete. Press button again for next chip.\n\n");
 }
+
+// ============================================================================
+// Display consolidated chip information before database matching
+// ============================================================================
+void display_consolidated_chip_info(void) {  // ← REMOVE "static"
+    // Declare external variables from picotoflash.c
+    extern FlashChipData test_chip;
+    extern int g_read_result_count;
+    extern read_result_t g_read_results[];
+    extern int g_write_result_count;
+    extern write_bench_capture_t g_write_results[];
+    extern erase_result_t g_erase_result;
+    
+    printf("\n");
+    printf("*******************************************************\n");
+    printf(" CONSOLIDATED CHIP INFORMATION\n");
+    printf("*******************************************************\n");
+    
+    // Identification Data
+    printf("\n--- CHIP IDENTIFICATION ---\n");
+    printf("  JEDEC ID        : %s\n", test_chip.jedec_id);
+    printf("  Capacity        : %.2f Mbit (%.2f MB)\n", 
+           test_chip.capacity_mbit, test_chip.capacity_mbit / 8.0f);
+    printf("  Manufacturer    : %s\n", 
+           test_chip.company[0] != '\0' ? test_chip.company : "Unknown");
+    printf("  Part Number     : %s\n", 
+           test_chip.chip_model[0] != '\0' ? test_chip.chip_model : "Unknown");
+    
+    // Read Performance
+    printf("\n--- READ PERFORMANCE ---\n");
+    if (g_read_result_count > 0) {
+        for (int i = 0; i < g_read_result_count && i < 8; i++) {
+            if (!g_read_results[i].valid) continue;
+            printf("  @ %d MHz:\n", g_read_results[i].clock_mhz);
+            printf("    - 1-byte     : %.2f MB/s\n", g_read_results[i].size_stats[0].mb_s);
+            printf("    - Page (256B): %.2f MB/s\n", g_read_results[i].size_stats[1].mb_s);
+            printf("    - Sector (4K): %.2f MB/s\n", g_read_results[i].size_stats[2].mb_s);
+            printf("    - Block (32K): %.2f MB/s\n", g_read_results[i].size_stats[3].mb_s);
+            printf("    - Block (64K): %.2f MB/s\n", g_read_results[i].size_stats[4].mb_s);
+        }
+        printf("  Derived @ 50 MHz: %.2f MB/s\n", test_chip.read_speed_max);
+    } else {
+        printf("  No read benchmarks available\n");
+    }
+    
+    // Write Performance
+    printf("\n--- WRITE PERFORMANCE ---\n");
+    if (g_write_result_count > 0) {
+        for (int i = 0; i < g_write_result_count && i < 8; i++) {
+            if (!g_write_results[i].valid) continue;
+            printf("  @ %d MHz (actual: %d MHz):\n", 
+                   g_write_results[i].clock_mhz_requested,
+                   g_write_results[i].clock_mhz_actual);
+            
+            for (int s = 0; s < g_write_results[i].num_results && s < 5; s++) {
+                printf("    - %-12s: %.2f MB/s (avg: %.1f µs)\n",
+                       g_write_results[i].results[s].label,
+                       g_write_results[i].results[s].stats.mb_s,
+                       g_write_results[i].results[s].stats.avg_us);
+            }
+        }
+    } else {
+        printf("  Write benchmarks disabled or not available\n");
+    }
+    
+    // Erase Performance
+    printf("\n--- ERASE PERFORMANCE ---\n");
+    if (g_erase_result.valid) {
+        printf("  4KB Sector:\n");
+        printf("    - Average     : %.2f ms\n", g_erase_result.avg_4k);
+        printf("    - Min / Max   : %u ms / %u ms\n", 
+               g_erase_result.min_4k, g_erase_result.max_4k);
+        
+        printf("  32KB Block:\n");
+        printf("    - Average     : %.2f ms\n", g_erase_result.avg_32k);
+        printf("    - Min / Max   : %u ms / %u ms\n", 
+               g_erase_result.min_32k, g_erase_result.max_32k);
+        
+        printf("  64KB Block:\n");
+        printf("    - Average     : %.2f ms\n", g_erase_result.avg_64k);
+        printf("    - Min / Max   : %u ms / %u ms\n", 
+               g_erase_result.min_64k, g_erase_result.max_64k);
+    } else {
+        printf("  No erase benchmarks available\n");
+    }
+    
+    printf("\n*******************************************************\n");
+    printf(" Ready to match against database...\n");
+    printf("*******************************************************\n\n");
+}
+
 
 // ============================================================================
 // Display detailed comparison of test chip with top 3 matches

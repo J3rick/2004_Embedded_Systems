@@ -325,9 +325,6 @@ int sd_log_benchmark_results(void) {
     
     f_close(&file);
     printf("✓ Comprehensive benchmark results logged to %s\n", filename);
-    printf("  - %d read clock speeds\n", g_read_result_count);
-    printf("  - %d write clock speeds\n", g_write_result_count);
-    printf("  - Erase timings (4KB, 32KB, 64KB)\n");
     
     return SUCCESS;
 }

@@ -34,5 +34,6 @@ void display_no_database_error(void);
 void display_identification_complete(void);
 void display_detailed_comparison(void);
 void display_full_database(void);
+void display_consolidated_chip_info(void);
 
 #endif // DISPLAY_FUNCTIONS_H

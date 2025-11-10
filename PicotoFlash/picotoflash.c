@@ -491,7 +491,9 @@ int main(void) {
 #else
             printf("\n[STEP 4/5] ERASE BENCHMARKS DISABLED\n");
 #endif
-            
+            // ===== DISPLAY CONSOLIDATED CHIP INFO =====
+            display_consolidated_chip_info(); 
+
             // ===== STEP 5: MATCH AGAINST DATABASE =====
             printf("\n[STEP 5/5] Matching Against Database...\n");
             
