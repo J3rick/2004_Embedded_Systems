@@ -155,6 +155,22 @@ static bool read_sfdp(uint32_t a, uint8_t *buf, size_t n) {
     return true;
 }
 
+// ==================== JEDEC FALLBACK CAPACITY ====================
+static void jedec_fallback_capacity(ident_t *id) {
+    uint8_t last_byte = id->jedec[2];  // last JEDEC byte
+    switch (last_byte) {
+        case 0x18: test_chip.capacity_mbit = 128.0f; break;
+        case 0x16: test_chip.capacity_mbit = 32.0f;  break;
+        case 0x13: test_chip.capacity_mbit = 4.0f;   break;
+        case 0x12: test_chip.capacity_mbit = 2.0f;   break;
+        case 0x11: test_chip.capacity_mbit = 1.0f;   break;
+        case 0x10: test_chip.capacity_mbit = 0.512f; break;
+        case 0x09: test_chip.capacity_mbit = 0.256f; break;
+        default:   test_chip.capacity_mbit = 0.0f;   break;
+    }
+    printf("[FALLBACK] Using JEDEC fallback capacity: %.3f Mbit\n", test_chip.capacity_mbit);
+}
+
 static void identify(ident_t *id) {
     memset(id, 0, sizeof(*id));
     read_jedec_id(id->jedec);
@@ -253,17 +269,22 @@ static void identify(ident_t *id) {
 
 // ========== Benchmark Data Capture Functions ==========
 static void populate_test_chip_from_identification(ident_t *id) {
-    snprintf(test_chip.jedec_id, sizeof(test_chip.jedec_id),
+    // Convert JEDEC ID to string format (matches CSV format: "EF 40 18")
+    snprintf(test_chip.jedec_id, sizeof(test_chip.jedec_id), 
              "%02X %02X %02X", id->jedec[0], id->jedec[1], id->jedec[2]);
-
-    if (id->density_bits > 0) {
+    
+    // Use fallback if SFDP density is zero or unrealistically small
+    if (id->density_bits == 0 || id->density_bits < 1024) {  // anything < 1 Kbit is invalid
+        jedec_fallback_capacity(id);
+    } else {
         test_chip.capacity_mbit = (float)(id->density_bits) / 1048576.0f;
     }
-
+    
+    // Initialize chip info as unknown (will be filled by database match)
     strcpy(test_chip.chip_model, "UNKNOWN");
     strcpy(test_chip.company, "");
     strcpy(test_chip.chip_family, "");
-
+    
     printf("\n");
     printf("=======================================================\n");
     printf(" CHIP IDENTIFICATION\n");
