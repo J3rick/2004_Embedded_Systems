@@ -1,13 +1,14 @@
 #ifndef READ_H
 #define READ_H
 
+#include <stdio.h>
 #include <stdint.h>
-#include <stddef.h>
 #include <stdbool.h>
 #include "hardware/spi.h"
 
 // Read sizes configuration
 #define NUM_READ_SIZES 5
+
 extern const size_t k_read_sizes[NUM_READ_SIZES];
 extern const char* k_read_labels[NUM_READ_SIZES];
 
@@ -45,9 +46,11 @@ extern int g_read_result_count;
 // Function declarations
 void read_reset_results(void);
 void read_save_result(int mhz, const read_bench_capture_t *cap);
-void read_run_benches_capture(spi_inst_t *spi, uint8_t cs_pin, bool use_fast, 
-                              uint8_t dummy, int mhz_req, read_bench_capture_t *cap_out);
-void read_derive_and_print_50(const int *req_mhz, const read_bench_capture_t *caps, int n_caps);
+void read_run_benches_capture(spi_inst_t *spi, uint8_t cs_pin, bool use_0B, uint8_t dummy, int mhz, read_bench_capture_t *out);
+void read_derive_and_print_50(const int *clocks, const read_bench_capture_t *caps, int n);
 void read_print_summary_tables(void);
+
+// NEW: Function to get derived 50MHz read speed
+double read_get_50mhz_speed(void);
 
 #endif // READ_H

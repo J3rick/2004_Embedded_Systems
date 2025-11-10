@@ -6,9 +6,9 @@
 #include "hardware/spi.h"
 
 // Erase block sizes
-#define SECTOR_4K   4096u
-#define BLOCK_32K   32768u
-#define BLOCK_64K   65536u
+#define SECTOR_4K  4096u
+#define BLOCK_32K  32768u
+#define BLOCK_64K  65536u
 
 // Erase result storage
 typedef struct {
@@ -52,19 +52,17 @@ typedef struct {
     float read_speed_50mhz_mbs;
 } erase_chip_db_entry_t;
 
-// Global results storage
+// Global erase result
 extern erase_result_t g_erase_result;
 
-// Function declarations
+// Function prototypes
 void erase_reset_results(void);
-void erase_save_result(int mhz, double avg4k, uint32_t min4k, uint32_t max4k,
-                       double avg32k, uint32_t min32k, uint32_t max32k,
-                       double avg64k, uint32_t min64k, uint32_t max64k);
-void erase_run_benches_at_clock(spi_inst_t *spi, uint8_t cs_pin,
-                                const erase_ident_t *id,
-                                const erase_chip_db_entry_t *chip,
-                                int mhz, uint32_t test_addr);
+void erase_flash_unprotect(spi_inst_t *spi, uint8_t cs, uint8_t mfg, uint32_t test_base);
+void erase_run_benches_at_clock(spi_inst_t *spi, uint8_t cs, const erase_ident_t *id,
+                                 const erase_chip_db_entry_t *db_entry, int mhz, uint32_t base);
 void erase_print_summary_tables(void);
-void erase_flash_unprotect(spi_inst_t *spi, uint8_t cs_pin, uint8_t mfr, uint32_t test_addr);
+
+// NEW: Function to get erase timing results
+erase_result_t erase_get_results(void);
 
 #endif // ERASE_H

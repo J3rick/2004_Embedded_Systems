@@ -300,3 +300,7 @@ void erase_flash_unprotect(spi_inst_t *spi, uint8_t cs_pin, uint8_t mfr, uint32_
     else
         printf("  [OK]   UNPROTECT, SR1=0x%02X->0x%02X, SR2=0x%02X->0x%02X\n", sr1, chk1, sr2, chk2);
 }
+
+erase_result_t erase_get_results(void) {
+    return g_erase_result;
+}
