@@ -3,6 +3,9 @@ set(PICO_BOARD pico_w)
 
 project(PicotoFlash C CXX ASM)
 
+pico_sdk_init()
+set(PICO_LWIP_CONTRIB_PATH "${PICO_SDK_PATH}/lib/lwip/contrib/apps")
+
 add_executable(PicotoFlash
     hw_config.c
     identification.c
