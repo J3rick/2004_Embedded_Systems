@@ -1,0 +1,131 @@
+┌────────────────────────────────────────────┐
+│    STEP 1: MOUNT SD CARD                   │
+│    Function: f_mount()                     │
+│    • Mount SD card filesystem              │
+│    • Check if card is present              │
+│    • Return ERROR_SD_NOT_PRESENT if fail   │
+└──────────────┬─────────────────────────────┘
+               │ [Success]
+               v
+┌────────────────────────────────────────────┐
+│    STEP 2: LOAD DATABASE                   │
+│    Function: sd_load_chip_database()       │
+│    • Open DATASHEET.csv                    │
+│    • Parse each line (skip header)         │
+│    • Validate entries:                     │
+│      - JEDEC format (8+ chars, hex+spaces) │
+│      - Capacity is power of 2              │
+│      - Non-zero erase times                │
+│    • Store valid entries in database[]     │
+│    • Count malformed entries               │
+└──────────────┬─────────────────────────────┘
+               │ [Loaded N entries]
+               v
+┌────────────────────────────────────────────┐
+│    STEP 3: MATCHING ALGORITHM              │
+│    Function: chip_match_database()         │
+│    ┌──────────────────────────────────┐   │
+│    │ For each database entry:         │   │
+│    │  1. Calculate confidence score   │   │
+│    │     - JEDEC ID (40% weight)      │   │
+│    │     - Read speed (20% weight)    │   │
+│    │     - Write speed (20% weight)   │   │
+│    │     - Erase speed (10% weight)   │   │
+│    │     - Clock profile (10% weight) │   │
+│    │                                  │   │
+│    │  2. Check for outliers (>50%)    │   │
+│    │                                  │   │
+│    │  3. Insert into Top 3 if higher  │   │
+│    │     confidence                   │   │
+│    └──────────────────────────────────┘   │
+│    • Sort by confidence (highest first)    │
+│    • Determine final status:               │
+│      - FOUND: ≥95% + JEDEC match          │
+│      - BEST_MATCH: ≥70% confidence        │
+│      - UNKNOWN: <70% confidence           │
+└──────────────┬─────────────────────────────┘
+               │ [Top 3 matches identified]
+               v
+┌────────────────────────────────────────────┐
+│    STEP 4: LOG RESULTS                     │
+│    Function: sd_log_benchmark_results()    │
+│    • Generate timestamp                    │
+│    • Create/append to CSV log file         │
+│    • Write: timestamp, JEDEC, match info   │
+│    • Include performance data              │
+│    • Sync and close file                   │
+└──────────────┬─────────────────────────────┘
+               │ [Logged]
+               v
+┌────────────────────────────────────────────┐
+│    STEP 5: CREATE FORENSIC REPORT          │
+│    Function: sd_create_forensic_report()   │
+│    • Generate unique filename with time    │
+│    • Write comprehensive report:           │
+│      - Tested chip data                    │
+│      - Identification result               │
+│      - Confidence breakdown                │
+│      - Top 3 matches                       │
+│      - Anomaly flags (outliers, warnings)  │
+│      - Test conditions                     │
+│      - Data integrity hash                 │
+│    • Save to Report/ folder                │
+└──────────────┬─────────────────────────────┘
+               │ [Complete]
+               v
+┌────────────────────────────────────────────┐
+│    STEP 6: DISPLAY RESULTS                 │
+│    • Print match status                    │
+│    • Show chip identification              │
+│    • Display confidence level              │
+│    • Show outlier warnings                 │
+└──────────────┬─────────────────────────────┘
+               │
+               v
+     [Return to Main Loop]
+
+
+
+Confidence Calculation Detail (STEP 3):
+chip_calculate_confidence() for each database entry:
+
+┌──────────────────────────────────────┐
+│  1. JEDEC ID Match (Binary)          │
+│     strcmp(test, database) == 0?     │
+│     Yes: 100 points × 0.40 = 40      │
+│     No:  0 points × 0.40 = 0         │
+└──────────────┬───────────────────────┘
+               v
+┌──────────────────────────────────────┐
+│  2. Read Speed Deviation              │
+│     deviation = |test - db| / db     │
+│     Apply 5% tolerance band          │
+│     score = (1 - dev/0.15) × 100     │
+│     points × 0.20                    │
+└──────────────┬───────────────────────┘
+               v
+┌──────────────────────────────────────┐
+│  3. Write Speed Deviation             │
+│     (same as read speed)             │
+│     points × 0.20                    │
+└──────────────┬───────────────────────┘
+               v
+┌──────────────────────────────────────┐
+│  4. Erase Speed Deviation             │
+│     Apply 20% tolerance              │
+│     points × 0.10                    │
+└──────────────┬───────────────────────┘
+               v
+┌──────────────────────────────────────┐
+│  5. Clock Profile Match               │
+│     Compare max clock speeds         │
+│     points × 0.10                    │
+└──────────────┬───────────────────────┘
+               v
+┌──────────────────────────────────────┐
+│  6. Weight Redistribution             │
+│     If missing factors, redistribute │
+│     total_score / available_weight   │
+└──────────────┬───────────────────────┘
+               v
+       Overall Confidence (0-100%)
