@@ -12,6 +12,7 @@ add_executable(PicotoFlash
     write.c
     erase.c
     read.c
+    ${PICO_LWIP_CONTRIB_PATH}/ping/ping.c
 )
 
 add_subdirectory(fatfs/FatFs_SPI build/fatfs_spi)
@@ -20,6 +21,14 @@ target_include_directories(PicotoFlash PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
     ${CMAKE_CURRENT_LIST_DIR}/fatfs
     ${CMAKE_CURRENT_LIST_DIR}/fatfs/FatFs_SPI
+    ${PICO_LWIP_CONTRIB_PATH}/apps/ping
+
+)
+
+target_compile_definitions(PicotoFlash PRIVATE
+    NO_SYS=0
+    LWIP_SOCKET=1
+    PING_USE_SOCKETS=1
 )
 
 target_link_libraries(PicotoFlash
@@ -28,6 +37,9 @@ target_link_libraries(PicotoFlash
     hardware_adc
     hardware_spi
     FatFs_SPI
+    pico_cyw43_arch_lwip_sys_freertos
+    FreeRTOS-Kernel-Heap4
+
 )
 
 

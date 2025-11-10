@@ -32,7 +32,7 @@
 // ========== Pin Definitions ==========
 #define BUTTON_PIN 20              // GP20 - Run benchmarks & identification
 #define DISPLAY_BUTTON_PIN 21      // GP21 - View database
-#define FLASH_SPI spi0
+#define FLASH_SPI spi0  
 #define PIN_SCK 2
 #define PIN_MOSI 3
 #define PIN_MISO 4
