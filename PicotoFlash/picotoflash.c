@@ -311,8 +311,9 @@ static void capture_erase_benchmark_results(void) {
 // ========== Main Function ==========
 int main(void) {
     stdio_init_all();
+    cyw43_arch_init();
     sleep_ms(2000);
-    
+
     printf("\n");
     printf("===============================================\n");
     printf(" UNIFIED FLASH BENCHMARK & IDENTIFICATION\n");
@@ -333,6 +334,7 @@ int main(void) {
     };
     rtc_init();
     rtc_set_datetime(&t);
+    cyw43_arch_enable_sta_mode();
     
     // Initialize SPI for flash
     spi_init(FLASH_SPI, 5 * 100 * 1000);
