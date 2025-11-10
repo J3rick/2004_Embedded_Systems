@@ -1,0 +1,9 @@
+{
+    "files.associations": {
+        "display_functions.h": "c",
+        "sd_functions.h": "c",
+        "erase.h": "c",
+        "read.h": "c",
+        "identification.h": "c"
+    }
+}
