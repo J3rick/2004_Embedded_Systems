@@ -58,6 +58,16 @@
 #define PAGE_SIZE 256u
 #define ENABLE_DESTRUCTIVE_TESTS 1
 
+// ============ Wifi Details ============
+#define WIFI_SSID "Jerick S23"
+#define WIFI_PASSWORD "Jerick03"
+
+// ============ HTTP Details ============
+#define WEB_SERVER_PORT 80
+#define WEB_SERVER_TASK_STACK_SIZE 2048
+#define WEB_SERVER_TASK_PRIORITY 2
+#define RUN_FREERTOS_ON_CORE 0
+
 // ========== Global Variables ==========
 FlashChipData database[MAX_DATABASE_ENTRIES];
 int database_entry_count = 0;
@@ -388,6 +398,22 @@ int main(void) {
             display_database_loaded(database_entry_count);
         }
     }
+
+    // Connect to WiFi
+    if (cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID, WIFI_PASSWORD, CYW43_AUTH_WPA2_AES_PSK, 30000)) {
+        printf("Failed to connect to WiFi. Check SSID/Password & signal.\n");
+        cyw43_arch_deinit();
+    }
+    else {
+        printf("Connected to WiFi Network: %s\n", WIFI_SSID);
+    }
+    // Display Network Information
+    printf("\n=== Network Information ===\n");
+    printf("IP Address: %s\n", ip4addr_ntoa(netif_ip4_addr(netif_list)));
+    printf("Netmask: %s\n", ip4addr_ntoa(netif_ip4_netmask(netif_list)));
+    printf("Gateway: %s\n", ip4addr_ntoa(netif_ip4_gw(netif_list)));
+    printf("===========================\n\n");
+
     
     display_startup_instructions();
     
