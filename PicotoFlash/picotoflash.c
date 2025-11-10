@@ -14,14 +14,25 @@
 #include <string.h>
 #include <stdbool.h>
 #include <math.h>
+
 #include "pico/stdlib.h"
 #include "pico/stdio.h"
+#include "pico/cyw43_arch.h"
+
+#include "lwip/ip4_addr.h"
+#include "lwip/tcp.h"
+#include "lwip/pbuf.h"
+#include "FreeRTOS.h"
+#include "FreeRTOSConfig.h"
+
 #include "hardware/gpio.h"
 #include "hardware/rtc.h"
 #include "hardware/spi.h"
 #include "hardware/clocks.h"
+
 #include "ff.h"
 #include "fatfs/FatFs_SPI/sd_driver/sd_card.h"
+
 #include "identification.h"
 #include "sd_functions.h"
 #include "display_functions.h"
