@@ -4,15 +4,18 @@ set(PICO_BOARD pico_w)
 project(PicotoFlash C CXX ASM)
 
 add_executable(PicotoFlash
-    hw_config.c
-    identification.c
-    sd_functions.c
-    display_functions.c
-    picotoflash.c
-    write.c
-    erase.c
-    read.c
+  hw_config.c
+  identification.c
+  sd_functions.c
+  display_functions.c
+  read.c
+  erase.c
+  write.c
+  picotoflash.c
+  jedec_universal_backup.c   # backup + restore APIs
+  univ_restore_sd.c          # SD adapter for restore
 )
+
 
 add_subdirectory(fatfs/FatFs_SPI build/fatfs_spi)
 
